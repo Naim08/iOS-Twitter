@@ -11,8 +11,14 @@ import UIKit
 class TweetsViewController: UIViewController {
     var tweets: [Tweet]!
 
+    @IBOutlet weak var tableView: UITableView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 120
         TwitterClient.sharedInstance.homeTimeLine({ (tweets:[Tweet]) -> () in
             self.tweets = tweets
             for tweet in tweets {
@@ -45,4 +51,19 @@ class TweetsViewController: UIViewController {
     }
     */
 
+}
+// TableView methods
+extension TweetsViewController: UITableViewDelegate, UITableViewDataSource  {
+    public func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tweets != nil {
+            return tweets.count
+        } else {
+            return 0
+        }    }
+    public func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier("TweetCell", forIndexPath: indexPath) as! TweetCell
+        cell.tweet = tweets[indexPath.row]
+        return cell
+    }
+    
 }
