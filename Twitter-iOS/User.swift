@@ -7,27 +7,57 @@
 //
 
 import UIKit
-
+var userDidLogoutNotification = "userDidLogoutNotification"
 class User: NSObject {
-    
-    var name: NSString?
-    var screenname: NSString?
-    var profileURL: NSURL?
-    var tagline: NSString?
-    
+    let id: Int?
+    var idStr: String?
+    var name: String?
+    var screenname: String?
+    var profileImageUrl: String?
+    var tagline: String?
     var dictionary: NSDictionary?
+    var imageURL: NSURL?
+    var location: String?
+    var statusesCount: Int?
+    var friendsCount: Int?
+    var createdAt: NSDate?
+    var favoritesCount: Int?
+    var headerImageUrl: String?
+    var headerBackgroundColor: String?
+    var followersCount: Int?
+    var followingCount: Int?
+    var tweetsCount: Int?
     
-    init(dictionary: NSDictionary) {
+    init(dictionary: NSDictionary)
+    {
         self.dictionary = dictionary
+        id = dictionary["id"] as? Int
+        idStr = dictionary["id_str"] as? String
         name = dictionary["name"] as? String
         screenname = dictionary["screen_name"] as? String
+        profileImageUrl = dictionary["profile_image_url"] as? String
         tagline = dictionary["description"] as? String
-        let profileUrlString = dictionary["profile_image_url_https"] as? String
-        if let profileUrlString = profileUrlString {
-            profileURL = NSURL(string: profileUrlString)
+        favoritesCount = dictionary["favourites_count"] as? Int
+        headerImageUrl = dictionary["profile_banner_url"] as? String
+        headerBackgroundColor = dictionary["profile_background_color"] as? String
+        followersCount = dictionary["followers_count"] as? Int
+        followingCount = dictionary["friends_count"] as? Int
+        tweetsCount = dictionary["statuses_count"] as? Int
+        
+        
+        if profileImageUrl != nil {
+            imageURL = NSURL(string: profileImageUrl!)!
+        } else {
+            imageURL = nil
         }
     }
     
+    func logout() {
+        User.currentUser = nil
+        TwitterClient.sharedInstance.requestSerializer.removeAccessToken()
+        
+        NSNotificationCenter.defaultCenter().postNotificationName(userDidLogoutNotification, object: nil)
+    }
     static var _currentUser: User?
     
     class var currentUser: User? {

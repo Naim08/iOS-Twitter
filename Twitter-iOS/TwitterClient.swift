@@ -92,5 +92,101 @@ class TwitterClient: BDBOAuth1SessionManager {
         })
         
     }
+    func newTweetWithParams(params: NSDictionary!, completion: (tweet: Tweet?, error: NSError?) -> ()) {
+        POST("1.1/statuses/update.json", parameters: params, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+            print("tweeted successfully")
+            let tweet = Tweet(dictionary: response as! NSDictionary)
+            completion(tweet: tweet, error: nil)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("did not tweet")
+                completion(tweet: nil, error: error)
+        })
+    }
+    
+    func retweetWithParams(id: String, params: NSDictionary?, completion:(error: NSError?) -> ()) {
+        print(id)
+        POST("1.1/statuses/retweet/\(id).json", parameters: params, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+            print("successfully retweeted")
+            completion(error: nil)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("error retweeting")
+                completion(error: error)
+        })
+    }
+    
+    func unretweetWithParams(id: String, tweet: Tweet?, params: NSDictionary?, completion:(error: NSError?) -> ()) {
+        
+        var originalTweetId = ""
+        var retweetId = ""
+        if tweet!.retweeted == false {
+            print("cannot untweet if have not retweeted")
+        } else if tweet!.retweeted_status == nil{
+            originalTweetId = tweet!.idStr!
+        } else {
+            originalTweetId = tweet!.retweeted_status!["id_str"] as! String
+        }
+        
+        GET("1.1/statuses/show/\(originalTweetId).json?include_my_retweet=1", parameters: params, success: { (operation: NSURLSessionDataTask!,response: AnyObject?) -> Void in
+            let fullTweet = response as! NSDictionary
+            let retweet = fullTweet["current_user_retweet"]!
+            retweetId = retweet["id_str"] as! String
+            print("got full tweet")
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("error getting full tweet")
+        })
+        
+        
+        POST("1.1/statuses/unretweet/\(id).json", parameters: params, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+            print("successfully unretweeted")
+            completion(error: nil)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("error unretweeting")
+                completion(error: error)
+        })
+    }
+    
+    
+    func favoriteWithParams(id: String, params: NSDictionary?, completion:(error: NSError?) -> ()) {
+        
+        POST("1.1/favorites/create.json?id=\(id)", parameters: params, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+            print("successfully favorited")
+            completion(error: nil)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("error favoriting")
+                completion(error: error)
+        })
+    }
+    
+    func unfavoriteWithParams(id: String, params: NSDictionary?, completion:(error: NSError?) -> ()) {
+        
+        POST("1.1/favorites/destroy.json?id=\(id)", parameters: params, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+            print("successfully unfavorited")
+            completion(error: nil)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("error unfavoriting")
+                completion(error: error)
+        })
+    }
+    func userTimelineWithParams(id: String, params: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) -> ()) {
+        GET("1.1/statuses/user_timeline.json?id=\(id)", parameters: params, success: { (operation: NSURLSessionDataTask!,response: AnyObject?) -> Void in
+            let tweets = Tweet.tweetswithArray(response as! [NSDictionary])
+            completion(tweets: tweets, error: nil)
+            
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("eror getting user timeline")
+                completion(tweets: nil, error: error)
+        })
+    }
+
+    func homeTimelineWithParams(params: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) -> ()) {
+        GET("1.1/statuses/home_timeline.json", parameters: params, success: { (operation: NSURLSessionDataTask!,response: AnyObject?) -> Void in
+            let tweets = Tweet.tweetswithArray(response as! [NSDictionary])
+            completion(tweets: tweets, error: nil)
+            
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("eror getting home timeline")
+                completion(tweets: nil, error: error)
+        })
+    }
 
 }

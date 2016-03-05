@@ -7,53 +7,62 @@
 //
 
 import UIKit
+import RelativeFormatter
 
 class Tweet: NSObject {
-    var text: NSString?
-    var timestamp: NSDate?
-    var retweetCount: Int = 0
-    var favoritesCount: Int = 0
-    var timePassed: Int = 0
-    var timeSince: String!
+    var text: String?
+    var userName: String?
+    var name: String?
+    var createdAtString: String?
+    var createdAt: NSDate?
+    var timeAgo: String?
+    var user: User?
+    var id: NSNumber?
+    var idStr: String?
+    var favoritesCount: Int?
+    var retweetsCount: Int?
+    var retweeted: Bool?
+    var favorited: Bool?
+    var replyedId: String?
+    var retweeted_status: NSDictionary?
+      var profileImageUrl: String?
+    var dictionary: NSDictionary
+  
     
     init(dictionary: NSDictionary) {
+        self.dictionary = dictionary
+        user = User(dictionary:dictionary["user"] as! NSDictionary)
         text = dictionary["text"] as? String
-        retweetCount = (dictionary["retweet_count"] as? Int) ?? 0
-        favoritesCount = (dictionary["favourites_count"] as? Int) ?? 0
-        let timestampString = dictionary["created_at"] as? String
+        userName = user!.screenname
+        name = user!.name
+        profileImageUrl = user!.profileImageUrl
+        id = dictionary["id"] as? Int
+        idStr = dictionary["id_str"] as? String
+        retweeted = dictionary["retweeted"] as? Bool
+        favorited = dictionary["favorited"] as? Bool
+        replyedId = dictionary["in_reply_to_status_id_str"] as? String
+        retweeted_status = dictionary["retweeted_status"] as? NSDictionary
+        favoritesCount = user!.favoritesCount
+        retweetsCount = dictionary["retweet_count"] as? Int
         
-        if let timestampString = timestampString {
-            let formatter = NSDateFormatter()
-            formatter.dateFormat = "EEE MMM d HH:mm:ss Z y"
-            timestamp = formatter.dateFromString(timestampString)
-            let now = NSDate()
-            let then = timestamp
-            timePassed = Int(now.timeIntervalSinceDate(then!))
-            
-            if timePassed >= 86400 {
-                timeSince = String(timePassed / 86400)+"d"
-            }
-            if (3600..<86400).contains(timePassed) {
-                timeSince = String(timePassed/3600)+"h"
-            }
-            if (60..<3600).contains(timePassed) {
-                timeSince = String(timePassed/60)+"m"
-            }
-            if timePassed < 60 {
-                timeSince = String(timePassed)+"s"
-            }
-        }
-        
+        createdAtString = dictionary["created_at"] as? String
+        let formater = NSDateFormatter()
+        formater.dateFormat = "EEE MMM d HH:mm:ss Z y"
+        createdAt = formater.dateFromString(createdAtString!)
+        timeAgo = createdAt!.relativeFormatted()
+
     }
     
     class func tweetswithArray(dictionaries: [NSDictionary]) -> [Tweet]{
         var tweets = [Tweet]()
         for dictionary in dictionaries {
-            let tweet = Tweet(dictionary: dictionary)
-            tweets.append(tweet)
+             tweets.append(Tweet(dictionary: dictionary))
         }
         return tweets
     }
-
+    class func tweetAsDictionary(dict: NSDictionary) -> Tweet {
+        var tweet = Tweet(dictionary: dict)
+        return tweet
+    }
 
 }
